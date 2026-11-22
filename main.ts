@@ -9,9 +9,12 @@
 // themselves — the weight of the sleeping head, the dark hallway, the
 // blanket drawn up, the listening — and it keeps working after the last
 // line, because the listener is still standing there.
+// The text is 238 Unicode code points, inside the gate's 1–280 window.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+const DEFAULT_OUTPUT_DIR = "/output";
 
 const ENTRY =
   "She carries him up the stairs asleep, his head heavy on her shoulder, " +
@@ -20,6 +23,7 @@ const ENTRY =
   "moment, listening to him breathe.";
 
 function countCodePoints(text: string): number {
+  // Spread counts Unicode code points, not UTF-16 code units.
   return [...text].length;
 }
 
@@ -33,7 +37,7 @@ function validate(text: string): void {
   }
 }
 
-function verifyWritten(outPath: string): void {
+function verifyEntry(outPath: string): void {
   // Read back what was written and re-validate, so a bad write fails
   // loudly here instead of shipping a bad entry to the grader.
   const written = readFileSync(outPath, "utf8");
@@ -44,10 +48,14 @@ function verifyWritten(outPath: string): void {
   console.log(`wrote ${countCodePoints(written)} code points to ${outPath}`);
 }
 
+function resolveOutputDir(): string {
+  return process.env.MAKEFUN_OUTPUT_DIR ?? DEFAULT_OUTPUT_DIR;
+}
+
 function main(): void {
   validate(ENTRY);
 
-  const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+  const outDir = resolveOutputDir();
   if (!existsSync(outDir)) {
     mkdirSync(outDir, { recursive: true });
   }
@@ -55,7 +63,7 @@ function main(): void {
   // No trailing newline: the gate counts every character, and the text
   // is exactly as written here.
   writeFileSync(outPath, ENTRY, "utf8");
-  verifyWritten(outPath);
+  verifyEntry(outPath);
 }
 
 main();
